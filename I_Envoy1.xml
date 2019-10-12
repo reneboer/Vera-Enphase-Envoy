@@ -5,7 +5,7 @@
 	-- Thanks to elordude, Jacob and robertgabrielson.
 	json = require("dkjson")
 	local EData = { 
-		Version = "2.1 20160902",
+		Version = "2.3 20191012",
 		Description = "Envoy",
 		LogLevel = 3,
 		SID = "urn:rboer-com:serviceId:Envoy1",
@@ -17,7 +17,6 @@
 		NInterval = 1800,
 		syslog
 	}
-	local PluginImages = { 'Envoy' }
 	---------------------------------------------------------------------------------------------
 	-- Utility functions
 	---------------------------------------------------------------------------------------------
@@ -41,26 +40,6 @@
 			end	
 		end	
 	end 
-	-- Create links for UI6 or UI7 image locations if missing.
-	local function check_images(imageTable)
-		local imagePath =""
-		local sourcePath = "/www/cmh/skins/default/icons/"
-		if (luup.version_major >= 7) then
-			imagePath = "/www/cmh/skins/default/img/devices/device_states/"
-		elseif (luup.version_major == 6) then
-			imagePath = "/www/cmh_ui6/skins/default/icons/"
-		else
-			-- Default if for UI5, no idea what applies to older versions
-			imagePath = "/www/cmh/skins/default/icons/"
-		end
-		if (imagePath ~= sourcePath) then
-			for i = 1, #imageTable do
-				local source = sourcePath..imageTable[i]..".png"
-				local target = imagePath..imageTable[i]..".png"
-				os.execute(("[ ! -e %s ] &amp;&amp; ln -s %s %s"):format(target, source, target))
-			end
-		end	
-	end
 	-- Get variable value.
 	-- Use EData.SID and EData.DEVICE as defaults
 	local function varGet(name, service, device)
@@ -123,8 +102,6 @@
 		EData.DEVICE = lul_device
 		varSet("Version", EData.Version)
 		defVar("ActualUsage", 1, EData.ESID)
-		-- Make sure icons are accessible when they should be. 
-		check_images(PluginImages)
 		-- See if user disabled plug-in 
 		local isDisabled = luup.attr_get("disabled", EData.DEVICE)
 		if ((isDisabled == 1) or (isDisabled == "1")) then
@@ -168,7 +145,7 @@
 
 		if (HTTP_Code == 0) then
 			log("Retrieve HTTPget Complete...")
-			log(ENVOY_Raw)
+--			log(ENVOY_Raw)
 			local retData = json.decode(ENVOY_Raw)
 			log("Current Power --> "..retData.wattsNow.."  --> W")
 			log("WattsHour Today --> "..retData.wattHoursToday.."  --> Wh")
@@ -183,6 +160,7 @@
 			local fmt ="Today: %.3f  Week: %.1f"
 			varSet("DisplayLine1", fmt:format(retData.wattHoursToday/1000 ,retData.wattHoursSevenDays/1000), EData.ASID)
 			log("Finished Call "..retData.wattsNow.." --> "..retData.wattHoursToday.." --> "..retData.wattHoursSevenDays.." --> "..retData.wattHoursLifetime)
+			retData = nil  -- does this reduce memory usage?
 		else
 			varSet("Watts", 0, EData.ESID)
 			varSet("KWH", 0, EData.ESID)

@@ -1,6 +1,6 @@
 {
 	"flashicon": "icons\/Envoy.png",
-	"default_icon": "Envoy.png",
+	"default_icon": "../../../icons/Envoy.png",
 	"inScene": "0",
 	"Tabs": [
 		{
